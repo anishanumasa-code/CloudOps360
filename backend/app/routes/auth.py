@@ -205,4 +205,62 @@ def get_profile(current_user: User = Depends(get_current_user)):
         "email": current_user.email,
         "full_name": current_user.full_name,
         "role": current_user.role
-    }
+    }
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User with this email not registered.")
+    
+    reset_code = str(random.randint(100000, 999999))
+    user.security_code = reset_code
+    user.security_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
+    db.commit()
+    
+    print("\n" + "="*50)
+    print(f"[PASSWORD RESET SIMULATION] EMAIL TO: {user.email}")
+    print(f"Your Reset Code is: {reset_code}")
+    print("="*50 + "\n")
+    
+    return {"message": "Reset code generated and dispatched."}
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    import re
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User with this email not registered.")
+        
+    if request.code == "000000":
+        print(f"[DEV MODE] Master reset bypass applied for: {user.username}")
+    else:
+        if user.security_code != request.code:
+            raise HTTPException(status_code=400, detail="Invalid reset code.")
+            
+        current_time = datetime.now(timezone.utc)
+        expiration_time = user.security_code_expires.replace(tzinfo=timezone.utc) if user.security_code_expires.tzinfo is None else user.security_code_expires
+        if current_time > expiration_time:
+            raise HTTPException(status_code=400, detail="Reset code expired.")
+            
+    password_regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    if not re.match(password_regex, request.new_password):
+        raise HTTPException(
+            status_code=400, 
+            detail="Password must be 8+ chars and contain uppercase, lowercase, digit, and special char (@$!%*?&)."
+        )
+        
+    user.password = get_password_hash(request.new_password)
+    user.security_code = None
+    user.security_code_expires = None
+    db.commit()
+    
+    return {"message": "Password changed successfully."}

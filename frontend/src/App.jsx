@@ -13,7 +13,7 @@ function Home() {
   const [user, setUser] = useState(null);
   
   // Auth Modal States
-  const [authModal, setAuthModal] = useState(null); // 'login' | 'register' | null
+  const [authModal, setAuthModal] = useState(null); // 'login' | 'register' | 'forgot' | 'reset-code' | null
   const [identifier, setIdentifier] = useState(''); // email or username
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -22,6 +22,11 @@ function Home() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Reset Password States
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   
   // MFA States
   const [showMfa, setShowMfa] = useState(false);
@@ -191,6 +196,76 @@ function Home() {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccessMsg('');
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to dispatch reset code.');
+      }
+
+      setSuccessMsg('Reset code dispatched! Check SRE console logs.');
+      setAuthModal('reset-code');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccessMsg('');
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setError('Password must contain 8+ characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: resetEmail,
+          code: resetCode,
+          new_password: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Reset failed.');
+      }
+
+      setSuccessMsg('Password changed successfully! You can now log in.');
+      setAuthModal('login');
+      setResetEmail('');
+      setResetCode('');
+      setNewPassword('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setIdentifier('');
     setPassword('');
@@ -202,6 +277,9 @@ function Home() {
     setShowMfa(false);
     setMfaCode('');
     setShowPassword(false);
+    setResetEmail('');
+    setResetCode('');
+    setNewPassword('');
   };
 
   const openModal = (type) => {
@@ -396,13 +474,20 @@ function Home() {
                   {isLoading ? 'Verifying Credentials...' : 'Sign In Securely'}
                 </button>
 
-                <div className="text-center mt-6">
+                <div className="flex flex-col gap-2 mt-6 text-center">
                   <button 
                     type="button" 
                     onClick={() => { setError(''); setSuccessMsg(''); setAuthModal('register'); }} 
                     className="text-xs font-medium text-[#8A8F98] hover:text-orange-400 transition-colors"
                   >
                     Need a new operator node? Register here.
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => { setError(''); setSuccessMsg(''); setAuthModal('forgot'); }} 
+                    className="text-xs font-medium text-orange-400/80 hover:text-orange-400 transition-colors underline decoration-dotted mt-1.5"
+                  >
+                    Forgot password or need to reset?
                   </button>
                 </div>
               </form>
@@ -493,6 +578,100 @@ function Home() {
                     className="text-xs font-medium text-[#8A8F98] hover:text-orange-400 transition-colors"
                   >
                     Already registered? Sign in.
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* FORGOT PASSWORD FORM */}
+            {authModal === 'forgot' && (
+              <form onSubmit={handleForgotPassword} className="space-y-4 animate-fade-in">
+                <div className="text-center text-xs text-[#8A8F98] leading-relaxed mb-2 font-mono">
+                  Enter your registered email address below. We will generate a 6-digit recovery code.
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-[#8A8F98] uppercase mb-1.5 tracking-wider">Registered Email</label>
+                  <input 
+                    type="email" 
+                    required 
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full bg-[#121417] border border-[#272A30] rounded-lg px-4 py-2.5 text-sm focus:border-orange-500/60 focus:outline-none glow-input text-white transition-all" 
+                    placeholder="agent@cloudops.com" 
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-lg bg-orange-500 text-white font-bold hover:bg-orange-400 active:scale-95 transition-all text-sm shadow-[0_0_15px_rgba(249,115,22,0.2)] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-4"
+                >
+                  {isLoading ? 'Generating Code...' : 'Request Recovery Code'}
+                </button>
+                <div className="text-center mt-5 flex flex-col gap-2">
+                  <button 
+                    type="button" 
+                    onClick={() => { setError(''); setSuccessMsg(''); setAuthModal('login'); }} 
+                    className="text-xs font-medium text-[#8A8F98] hover:text-orange-400 transition-colors"
+                  >
+                    ← Back to Sign In
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* RESET PASSWORD CODE ENTRY FORM */}
+            {authModal === 'reset-code' && (
+              <form onSubmit={handleResetPassword} className="space-y-4 animate-fade-in">
+                <div className="p-3 bg-[#1A1D21] border border-orange-500/20 rounded-lg text-center text-xs text-[#8A8F98] font-mono leading-relaxed mb-2">
+                  ⚠️ <span className="text-white">DEMO MODE:</span> The reset code is printed in your running backend process log, or use the master bypass code <span className="text-emerald-400 font-bold">000000</span> to verify.
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-[#8A8F98] uppercase mb-1.5 tracking-wider">6-Digit Recovery Code</label>
+                  <input 
+                    type="text" 
+                    required 
+                    maxLength="6"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    className="w-full bg-[#121417] border border-[#272A30] rounded-lg px-4 py-2.5 text-center text-lg tracking-widest font-bold focus:border-orange-500/60 focus:outline-none glow-input text-white transition-all" 
+                    placeholder="------" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-[#8A8F98] uppercase mb-1.5 tracking-wider">New Password</label>
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      required 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-[#121417] border border-[#272A30] rounded-lg pl-4 pr-16 py-2.5 text-sm focus:border-orange-500/60 focus:outline-none glow-input text-white transition-all" 
+                      placeholder="••••••••" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-[#8A8F98] hover:text-[#FAFAFA] transition-colors cursor-pointer select-none px-2 py-1 hover:bg-[#1A1D21] rounded"
+                    >
+                      {showPassword ? "HIDE" : "SHOW"}
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-[#8A8F98] mt-1 font-mono leading-tight">Must contain 8+ characters, 1 uppercase, 1 lowercase, 1 number, 1 special character (@$!%*?&).</p>
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-lg bg-emerald-500 text-white font-bold hover:bg-emerald-400 active:scale-95 transition-all text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-4"
+                >
+                  {isLoading ? 'Resetting Password...' : 'Reset Password & Update Credentials'}
+                </button>
+                <div className="text-center mt-5">
+                  <button 
+                    type="button" 
+                    onClick={() => { setError(''); setSuccessMsg(''); setAuthModal('forgot'); }} 
+                    className="text-xs font-medium text-[#8A8F98] hover:text-orange-400 transition-colors"
+                  >
+                    ← Request new recovery code
                   </button>
                 </div>
               </form>
