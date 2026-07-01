@@ -24,11 +24,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://cloud-ops360.vercel.app", # Replace this with your exact Vercel URL
-        "http://localhost:5173",           # Keeps local testing working
-        "http://localhost:4173"            
-    ],
+    allow_origins=["*"],  # <--- The Nuclear Option
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
