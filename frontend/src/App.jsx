@@ -117,6 +117,7 @@ function Home() {
     setError('');
 
     try {
+      // Step 2: Verify MFA code
       const response = await fetch(`${API_BASE}/auth/verify-mfa`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,14 +130,34 @@ function Home() {
       }
 
       if (data.access_token) {
+        // Save the token first
         localStorage.setItem('token', data.access_token);
-        
-        // Fetch user profile information (mocking based on registration or decode)
-        const profileUser = { username: identifier, role: role || 'operator' };
-        localStorage.setItem('user', JSON.stringify(profileUser));
-        
+
+        // Fetch the real user profile from the backend using the fresh token
+        const profileRes = await fetch(`${API_BASE}/auth/profile`, {
+          headers: {
+            'Authorization': `Bearer ${data.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        let userObj;
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          userObj = {
+            username: profileData.username,
+            email: profileData.email,
+            full_name: profileData.full_name,
+            role: profileData.role
+          };
+        } else {
+          // Graceful fallback if profile fetch fails
+          userObj = { username: identifier, role: 'operator' };
+        }
+
+        localStorage.setItem('user', JSON.stringify(userObj));
         setIsLoggedIn(true);
-        setUser(profileUser);
+        setUser(userObj);
         setAuthModal(null);
         resetForm();
         navigate('/dashboard');
