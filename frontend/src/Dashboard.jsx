@@ -24,7 +24,7 @@ export default function Dashboard() {
     // Switch the active UI tab immediately
     setActiveTab(panel.id);
 
-    fetch(`https://cloudops-backend.onrender.com${panel.path}`, {
+    fetch(`https://cloudops360.onrender.com${panel.path}`, {
       method: panel.method,
     })
       .then(response => {
