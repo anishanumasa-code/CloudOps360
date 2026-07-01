@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import Dashboard from './Dashboard';
+import Dashboard from './Dashboard.jsx';
 
 function Home() {
   const [apiStatus, setApiStatus] = useState('checking');
@@ -51,15 +51,18 @@ function Home() {
         </div>
       </div>
 
-      {/* NAVIGATION */}
+      {/* NAVIGATION WITH LOGIN & REGISTRATION */}
       <nav className="flex items-center justify-between px-8 py-6 border-b border-[#272A30]/50 backdrop-blur-md sticky top-0 z-50">
         <div className="text-xl font-bold tracking-tight hover:scale-105 transition-transform duration-300 cursor-pointer">
           CloudOps<span className="text-orange-500">360</span>
         </div>
-        <div className="flex gap-6">
-          <a href="#" className="text-[#8A8F98] hover:text-[#FAFAFA] hover:-translate-y-0.5 transition-all duration-300 text-sm font-medium">Documentation</a>
-          <a href="#" className="text-[#8A8F98] hover:text-[#FAFAFA] hover:-translate-y-0.5 transition-all duration-300 text-sm font-medium">API</a>
-          <a href="#" className="text-[#8A8F98] hover:text-[#FAFAFA] hover:-translate-y-0.5 transition-all duration-300 text-sm font-medium">GitHub</a>
+        <div className="flex items-center gap-6">
+          <div className="hidden md:flex gap-6 mr-4">
+            <a href="#" className="text-[#8A8F98] hover:text-[#FAFAFA] transition-all duration-300 text-sm font-medium">Documentation</a>
+            <a href="#" className="text-[#8A8F98] hover:text-[#FAFAFA] transition-all duration-300 text-sm font-medium">GitHub</a>
+          </div>
+          <Link to="/login" className="text-[#FAFAFA] hover:text-orange-400 text-sm font-medium transition-colors">Log In</Link>
+          <Link to="/register" className="px-5 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-400 hover:scale-105 active:scale-95 transition-all duration-300 text-sm font-medium shadow-[0_0_15px_rgba(249,115,22,0.2)]">Sign Up</Link>
         </div>
       </nav>
 
@@ -78,19 +81,20 @@ function Home() {
           </span>
         </h1>
         
+        {/* NEW ENHANCED DESCRIPTION */}
         <p className="text-[#8A8F98] max-w-2xl text-lg md:text-xl mb-10 mx-auto leading-relaxed">
-          Your high-performance infrastructure is ready. Connect your endpoints, monitor metrics in real-time, and scale effortlessly.
+          CloudOps360 is your complete command center for modern infrastructure. Seamlessly provision resources, monitor real-time DBMS schemas—including entity types and attributes—and track global performance metrics from a single pane of glass.
         </p>
         
         <div className="flex justify-center gap-5">
-          <button className="px-8 py-3.5 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-400 hover:scale-105 active:scale-95 hover:shadow-[0_0_25px_rgba(249,115,22,0.4)] transition-all duration-300 cursor-pointer flex items-center gap-2 group">
-            Get Started
+          <Link to="/register" className="px-8 py-3.5 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-400 hover:scale-105 active:scale-95 hover:shadow-[0_0_25px_rgba(249,115,22,0.4)] transition-all duration-300 flex items-center gap-2 group">
+            Start Free Trial
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-          </button>
+          </Link>
           
-          <Link to="/dashboard" className="px-8 py-3.5 rounded-lg bg-[#121417] border border-[#272A30] text-[#FAFAFA] hover:bg-[#1a1d24] hover:border-[#3a3f47] hover:scale-105 active:scale-95 transition-all duration-300 font-medium cursor-pointer flex items-center gap-2">
+          <Link to="/dashboard" className="px-8 py-3.5 rounded-lg bg-[#121417] border border-[#272A30] text-[#FAFAFA] hover:bg-[#1a1d24] hover:border-[#3a3f47] hover:scale-105 active:scale-95 transition-all duration-300 font-medium flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#8A8F98]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -102,11 +106,35 @@ function Home() {
   );
 }
 
+// TEMPORARY PLACEHOLDERS FOR YOUR NEW ROUTES
+function LoginPlaceholder() {
+  return (
+    <div className="min-h-screen bg-[#090A0B] text-white flex flex-col items-center justify-center font-sans">
+      <h2 className="text-3xl font-bold mb-4">Log In</h2>
+      <p className="text-[#8A8F98] mb-8">Authentication endpoint integration pending...</p>
+      <Link to="/" className="text-orange-500 hover:text-orange-400 transition-colors">← Back to Home</Link>
+    </div>
+  );
+}
+
+function RegisterPlaceholder() {
+  return (
+    <div className="min-h-screen bg-[#090A0B] text-white flex flex-col items-center justify-center font-sans">
+      <h2 className="text-3xl font-bold mb-4">Create an Account</h2>
+      <p className="text-[#8A8F98] mb-8">Registration endpoint integration pending...</p>
+      <Link to="/" className="text-orange-500 hover:text-orange-400 transition-colors">← Back to Home</Link>
+    </div>
+  );
+}
+
+// MAIN APP ROUTER
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/login" element={<LoginPlaceholder />} />
+      <Route path="/register" element={<RegisterPlaceholder />} />
     </Routes>
   );
 }
