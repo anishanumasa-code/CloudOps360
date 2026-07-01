@@ -15,7 +15,7 @@ from app.routes.ai_report import router as ai_router
 from app.routes.knowledge import router as knowledge_router
 from app.routes.dashboard import router as dashboard_router
 from prometheus_fastapi_instrumentator import Instrumentator
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="CloudOps 360 API",
@@ -24,7 +24,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allows any frontend to connect
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
