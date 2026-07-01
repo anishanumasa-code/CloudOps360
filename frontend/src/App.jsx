@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import Dashboard from './Dashboard.jsx';
+import Metrics from './pages/Metrics.jsx';
+import AiCopilot from './pages/AiCopilot.jsx';
+import KnowledgeBase from './pages/KnowledgeBase.jsx';
 
 function Home() {
   const [apiStatus, setApiStatus] = useState('checking');
@@ -135,6 +138,9 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/login" element={<LoginPlaceholder />} />
       <Route path="/register" element={<RegisterPlaceholder />} />
+      <Route path="/Metrics" element={<MetricsPlaceholder />} />
+      <Route path="/AiCopilot" element={<AiCopilotPlaceholder />} />
+      <Route path="/KnowledgeBase" element={<KnowledgeBasePlaceholder />} />
     </Routes>
   );
 }

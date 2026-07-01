@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
+import psutil
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import text
+from google import genai
+from google.genai import types
+
 from app.database.session import SessionLocal
-from app.schemas.ai_report import AIReportResponse
-from app.core.dependencies import get_current_user
-from app.models.user import User
 
-# Ensure your AI service function is imported correctly
-from app.services.gemini import analyze_incident 
+router = APIRouter(prefix="/api/ai", tags=["AI Co-Pilot"])
+client = genai.Client()
 
-# 1. THIS IS THE MISSING VARIABLE!
-router = APIRouter(tags=["AI Assistant"])
-
+# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -18,28 +19,70 @@ def get_db():
     finally:
         db.close()
 
-# 2. Your endpoint goes here
-@router.post("/ai/analyze/{incident_id}", response_model=AIReportResponse)
-def analyze(
-    incident_id: int, 
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user) # <-- The Phase 8 Security Lock
-):
-    # (Insert your logic to fetch the incident/logs from the DB here)
-    title = f"Incident #{incident_id}"
-    description = "Database connection refused"
-    logs_context = "NGINX 502 Bad Gateway..."
+class ChatRequest(BaseModel):
+    prompt: str
 
-    # Call your working Gemini AI function
-    report_data = analyze_incident(title, description, logs_context)
-    
-    # (Insert your logic to save the report_data to the DB here)
-    
-    # Return the data to match your schema
-    return {
-        "id": 1,
-        "incident_id": incident_id,
-        "explanation": report_data["explanation"],
-        "recommendation": report_data["recommendation"],
-        "generated_at": "Just now"
-    }
+class ChatResponse(BaseModel):
+    reply: str
+
+@router.post("/chat", response_model=ChatResponse)
+def ai_chat(request: ChatRequest, db: Session = Depends(get_db)):
+    try:
+        # 1. SEARCH THE KNOWLEDGE BASE (The Memory Layer)
+        # We look for keywords from the user's prompt in past resolutions.
+        # Note: If you add pgvector to PostgreSQL later, this becomes an ultra-smart semantic search!
+        search_query = text("""
+            SELECT original_issue, resolution_steps 
+            FROM knowledge_base 
+            WHERE original_issue ILIKE :keyword 
+            LIMIT 3
+        """)
+        
+        # Simple keyword extraction (grabbing the first long word as a basic search for now)
+        keywords = [word for word in request.prompt.split() if len(word) > 4]
+        search_term = f"%{keywords[0]}%" if keywords else "%error%"
+        
+        past_incidents = db.execute(search_query, {"keyword": search_term}).fetchall()
+        
+        # 2. FORMAT THE HISTORICAL MEMORY
+        historical_context = "PREVIOUSLY RESOLVED INCIDENTS (Use these if relevant to the current query):\n"
+        if not past_incidents:
+            historical_context += "No similar past incidents found.\n"
+        else:
+            for incident in past_incidents:
+                historical_context += f"- Past Issue: {incident.original_issue}\n  Proven Fix: {incident.resolution_steps}\n\n"
+
+        # 3. GATHER LIVE METRICS
+        cpu_usage = psutil.cpu_percent(interval=0.1)
+        ram_usage = psutil.virtual_memory().percent
+
+        # 4. BUILD THE SYSTEM INSTRUCTION (Combining Live Data + Past Memory)
+        system_identity = f"""
+        You are an elite CloudOps Site Reliability Engineer (SRE) AI.
+        
+        LIVE SYSTEM STATE:
+        CPU: {cpu_usage}% | RAM: {ram_usage}%
+        
+        {historical_context}
+        
+        INSTRUCTIONS:
+        1. Answer the user's query.
+        2. If the user's issue matches a "PREVIOUSLY RESOLVED INCIDENT", strongly recommend the "Proven Fix".
+        3. If you suggest a fix, ask the user if they want you to execute it.
+        """
+
+        # 5. GENERATE RESPONSE
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=request.prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_identity,
+                temperature=0.2
+            )
+        )
+        
+        return {"reply": response.text}
+        
+    except Exception as e:
+        print(f"Gemini API Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to connect to AI Core.")

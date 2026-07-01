@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('health');
   const [endpointData, setEndpointData] = useState(null);
@@ -8,11 +9,11 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   // Your Catalogue of Endpoints
-  const panels = [
-    { id: 'health', name: 'System Health', path: '/', method: 'GET', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { id: 'dbms', name: 'DBMS Schema Diagnostics', path: '/api/db-schema', method: 'GET', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4' },
-    { id: 'metrics', name: 'Performance Metrics', path: '/api/metrics', method: 'GET', icon: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z' },
-    { id: 'provisioning', name: 'Resource Provisioning', path: '/api/provision', method: 'POST', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' }
+const panels = [
+    { id: 'health', name: 'System Health', path: '/health', method: 'GET', icon: '...' },
+    // Ensure this path exactly matches your backend router!
+    { id: 'metrics', name: 'Performance Metrics', path: '/metrics', method: 'GET', icon: '...' },
+    // ...
   ];
 
   // Function to ping your specific backend endpoints
@@ -71,8 +72,9 @@ export default function Dashboard() {
         
         {/* Sidebar Catalogue */}
         <aside className="w-72 border-r border-[#272A30] bg-[#090A0B] p-4 hidden md:flex flex-col gap-2 overflow-y-auto">
-          <div className="text-xs font-mono text-[#8A8F98] uppercase tracking-wider mb-2 px-2">Control Panels</div>
           
+          {/* --- EXISTING DASHBOARD PANELS (API FETCHERS) --- */}
+          <div className="text-xs font-mono text-[#8A8F98] uppercase tracking-wider mb-2 px-2">Control Panels</div>
           {panels.map((panel) => (
             <button
               key={panel.id}
@@ -92,6 +94,43 @@ export default function Dashboard() {
               </div>
             </button>
           ))}
+
+          {/* --- NEW PLATFORM PAGES (ROUTER LINKS) --- */}
+          <div className="text-xs font-mono text-[#8A8F98] uppercase tracking-wider mb-2 mt-6 px-2">Platform Features</div>
+          
+          <Link to="/metrics" className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent border border-transparent text-[#8A8F98] hover:bg-[#121417] hover:text-[#FAFAFA]">
+            <svg className="w-5 h-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {/* Chart Icon */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+            </svg>
+            <div className="flex flex-col">
+              <span className="font-medium text-sm">Advanced Metrics</span>
+              <span className="text-[10px] font-mono opacity-50">Grafana Dashboard</span>
+            </div>
+          </Link>
+
+          <Link to="/ai-copilot" className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent border border-transparent text-[#8A8F98] hover:bg-[#121417] hover:text-[#FAFAFA]">
+            <svg className="w-5 h-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {/* Sparkles/AI Icon */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <div className="flex flex-col">
+              <span className="font-medium text-sm">Gemini Co-Pilot</span>
+              <span className="text-[10px] font-mono opacity-50">AI Assistant</span>
+            </div>
+          </Link>
+
+          <Link to="/knowledge-base" className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 bg-transparent border border-transparent text-[#8A8F98] hover:bg-[#121417] hover:text-[#FAFAFA]">
+            <svg className="w-5 h-5 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {/* Book/Docs Icon */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <div className="flex flex-col">
+              <span className="font-medium text-sm">Knowledge Base</span>
+              <span className="text-[10px] font-mono opacity-50">Markdown Docs</span>
+            </div>
+          </Link>
+
         </aside>
 
         {/* Main Data Panel */}

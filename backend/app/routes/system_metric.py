@@ -33,7 +33,6 @@ def collect_metrics(db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_metric)
     return new_metric
-
 @router.get("/", response_model=List[SystemMetricResponse])
-def get_metrics(limit: int = 100, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_metrics(limit: int = 100, db: Session = Depends(get_db)):
     return db.query(SystemMetric).order_by(SystemMetric.timestamp.desc()).limit(limit).all()

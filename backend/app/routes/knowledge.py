@@ -45,7 +45,7 @@ def get_db():
         db.close()
 
 @router.post("/", response_model=ArticleResponse)
-def save_solution(article: ArticleCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def save_solution(article: ArticleCreate, db: Session = Depends(get_db)):
     """Saves a resolved incident and AI explanation into the Knowledge Base."""
     new_article = KnowledgeArticle(
         title=article.title,
@@ -58,7 +58,7 @@ def save_solution(article: ArticleCreate, db: Session = Depends(get_db), current
     return new_article
 
 @router.get("/search", response_model=List[ArticleResponse])
-def search_knowledge(query: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def search_knowledge(query: str, db: Session = Depends(get_db)):
     """Searches past incidents to find existing solutions before pinging the AI."""
     search_term = f"%{query}%"
     articles = db.query(KnowledgeArticle).filter(
