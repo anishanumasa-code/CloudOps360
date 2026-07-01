@@ -7,7 +7,7 @@ function Home() {
   const [apiStatus, setApiStatus] = useState('checking');
 
   useEffect(() => {
-    fetch('http://localhost:8000/')
+    fetch('https://cloudops-backend.onrender.com')
       .then(response => {
         if (response.ok) {
           setApiStatus('online');

@@ -8,7 +8,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Pinging your FastAPI backend
-    fetch('http://localhost:8000/')
+    fetch('https://cloudops-backend.onrender.com')
       .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
         return response.json();
