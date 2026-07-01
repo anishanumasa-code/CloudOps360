@@ -1,3 +1,4 @@
+import os
 import google.generativeai as genai
 
 # HARDCODED TEST (Do not push this to GitHub)
