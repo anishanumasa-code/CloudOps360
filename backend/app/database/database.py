@@ -1,24 +1,21 @@
 import os
-from urllib.parse import quote_plus
-from dotenv import load_dotenv
+import urllib.parse
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
 
-load_dotenv()
+# 1. Type your raw local password here. 
+# urllib.parse.quote_plus will automatically convert '@' to '%40' behind the scenes.
+raw_password = "Anish@18"
+safe_password = urllib.parse.quote_plus(raw_password)
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
+# 2. Build your local connection string using the safe password
+local_db_url = f"postgresql://postgres:{safe_password}@localhost:5432/cloudops360"
 
-DATABASE_URL = (
-    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+# 3. Grab the cloud URL if on Render, otherwise fall back to your local one
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", local_db_url)
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=True
-)
+# 4. Fix Render's specific "postgres://" naming quirk
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-Base = declarative_base()
+# 5. Spin up the engine
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
