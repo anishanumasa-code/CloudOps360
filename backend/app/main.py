@@ -22,6 +22,13 @@ app = FastAPI(
     description="AI-Assisted Cloud Operations Platform",
     version="1.0.0"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows any frontend to connect
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 Instrumentator().instrument(app).expose(app)
 
 Base.metadata.create_all(bind=engine)

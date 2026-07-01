@@ -3,4 +3,4 @@ venv/
 __pycache__/
 *.pyc
 .env
-backend/cloudops.db
+backend/cloudops.dbnode_modules/ 
