@@ -14,3 +14,4 @@ alembic
 httpx
 psutil
 prometheus-client
+google-genai
