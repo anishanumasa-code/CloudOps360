@@ -24,7 +24,11 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://cloud-ops360.vercel.app", # Replace this with your exact Vercel URL
+        "http://localhost:5173",           # Keeps local testing working
+        "http://localhost:4173"            
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,3 +65,6 @@ def db_test():
         return {"status": "Database Connected Successfully"}
     except Exception as e:
         return {"error": str(e)}
+@app.get("/")
+def health_check():
+    return {"status": "online", "message": "CloudOps360 API is fully operational"}
