@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import Dashboard from './Dashboard'; // We will create this file next!
+import Dashboard from './Dashboard';
 
-// 1. We move your entire UI into a "Home" component
 function Home() {
   const [apiStatus, setApiStatus] = useState('checking');
 
@@ -91,7 +90,6 @@ function Home() {
             </svg>
           </button>
           
-          {/* NOTICE: This is now a <Link> component instead of a <button> */}
           <Link to="/dashboard" className="px-8 py-3.5 rounded-lg bg-[#121417] border border-[#272A30] text-[#FAFAFA] hover:bg-[#1a1d24] hover:border-[#3a3f47] hover:scale-105 active:scale-95 transition-all duration-300 font-medium cursor-pointer flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#8A8F98]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -104,7 +102,6 @@ function Home() {
   );
 }
 
-// 2. The main App component now acts as a router traffic controller
 export default function App() {
   return (
     <Routes>

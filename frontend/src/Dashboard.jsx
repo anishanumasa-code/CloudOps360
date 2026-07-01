@@ -7,7 +7,6 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Pinging your FastAPI backend
     fetch('https://cloudops-backend.onrender.com')
       .then(response => {
         if (!response.ok) throw new Error('Network response was not ok');
@@ -25,8 +24,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#090A0B] text-[#FAFAFA] font-sans p-6 md:p-12 selection:bg-orange-500/30">
-      
-      {/* Top Navigation */}
       <nav className="flex justify-between items-center mb-12 border-b border-[#272A30] pb-6">
         <div className="text-xl font-bold tracking-tight">
           CloudOps<span className="text-orange-500">360</span> <span className="text-[#8A8F98] font-normal">/ Dashboard</span>
@@ -39,10 +36,7 @@ export default function Dashboard() {
         </Link>
       </nav>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Side: Stats Cards */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <div className="p-6 rounded-xl bg-[#121417] border border-[#272A30] shadow-xl">
             <h3 className="text-[#8A8F98] text-xs font-mono uppercase tracking-wider mb-2">System Status</h3>
@@ -58,10 +52,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Side: Terminal / JSON Output */}
         <div className="lg:col-span-2">
           <div className="rounded-xl bg-[#121417] border border-[#272A30] shadow-xl overflow-hidden flex flex-col h-full min-h-[400px]">
-            {/* Terminal Header */}
             <div className="bg-[#1a1d24] px-4 py-3 border-b border-[#272A30] flex items-center gap-2">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
@@ -71,7 +63,6 @@ export default function Dashboard() {
               <span className="ml-4 text-xs font-mono text-[#8A8F98]">GET http://localhost:8000/</span>
             </div>
             
-            {/* Terminal Body */}
             <div className="p-6 overflow-x-auto flex-grow">
               {loading ? (
                 <div className="flex flex-col gap-2 text-[#8A8F98] font-mono text-sm animate-pulse">
@@ -92,7 +83,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
