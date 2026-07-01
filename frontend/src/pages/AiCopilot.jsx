@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+import { apiFetch } from '../utils/api';
 
 export default function AiCopilot() {
-  // 1. Initialize chat with a welcome message
+  // Initialize chat with a welcome message
   const [messages, setMessages] = useState([
-    { role: 'ai', content: 'Hello! I am your CloudOps Gemini Co-Pilot. How can I help you analyze metrics or manage your infrastructure today?' }
+    { role: 'ai', content: 'Hello! I am your CloudOps Gemini Co-Pilot. How can I help you analyze metrics, query DBMS schemas, or troubleshoot infrastructure issues today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,63 +28,79 @@ export default function AiCopilot() {
     setIsLoading(true);
 
     try {
-      // NOTE: You will need to update this URL path to match your actual FastAPI AI router endpoint
-      const response = await fetch('https://cloudops360.onrender.com/api/ai/chat', {
+      // Use apiFetch to call the dynamic AI chat endpoint
+      const response = await apiFetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: userMsg.content }),
       });
 
+      if (!response.ok) {
+        throw new Error('AI Engine returned an error response.');
+      }
+
       const data = await response.json();
       
-      // Add AI response to UI (adjust data.reply based on your backend's JSON structure)
-      const aiMsg = { role: 'ai', content: data.reply || "No response received." };
+      // Add AI response to UI
+      const aiMsg = { role: 'ai', content: data.reply || "No response received from Gemini." };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'ai', content: 'Error connecting to the AI backend. Is the server running?' }]);
+      setMessages((prev) => [...prev, { 
+        role: 'ai', 
+        content: 'Error connecting to the AI backend. Verify that the backend server is running and has a valid Gemini API key configured.' 
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#090A0B] text-[#FAFAFA] p-6">
+    <div className="flex flex-col h-[calc(100vh-69px)] bg-[#090A0B] text-[#FAFAFA] p-6 animate-fade-in font-sans">
       
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <svg className="w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-6 h-6 text-orange-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           Gemini Co-Pilot
         </h1>
-        <p className="text-sm text-[#8A8F98]">AI-Assisted Cloud Operations</p>
+        <p className="text-xs text-[#8A8F98]">AI-Assisted Cloud Operations & SRE Diagnostics</p>
       </div>
 
       {/* Chat Container */}
-      <div className="flex-1 flex flex-col bg-[#121417] border border-[#272A30] rounded-xl overflow-hidden">
+      <div className="flex-1 flex flex-col bg-[#121417] border border-[#272A30] rounded-xl overflow-hidden shadow-2xl">
         
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-[#090A0B]/40">
           {messages.map((msg, index) => (
-            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] p-3 rounded-lg text-sm ${
+            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+              <div className={`max-w-[80%] p-4 rounded-xl text-sm leading-relaxed ${
                 msg.role === 'user' 
-                  ? 'bg-orange-500/10 border border-orange-500/30 text-orange-50 rounded-br-none' 
-                  : 'bg-[#1A1D21] border border-[#272A30] text-[#FAFAFA] rounded-bl-none'
+                  ? 'bg-orange-500/10 border border-orange-500/35 text-orange-50 rounded-br-none shadow-[0_0_15px_rgba(249,115,22,0.05)]' 
+                  : 'bg-[#1A1D21] border border-[#272A30] text-gray-200 rounded-bl-none'
               }`}>
-                {msg.content}
+                {msg.role === 'ai' && (
+                  <div className="text-[10px] font-mono text-orange-500 uppercase tracking-widest mb-1.5 font-bold">
+                    Gemini.SRE
+                  </div>
+                )}
+                {msg.role === 'user' && (
+                  <div className="text-[10px] font-mono text-[#8A8F98] uppercase tracking-widest mb-1.5 text-right font-bold">
+                    Operator
+                  </div>
+                )}
+                <div className="whitespace-pre-wrap">{msg.content}</div>
               </div>
             </div>
           ))}
           
           {/* Typing Indicator */}
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-[#1A1D21] border border-[#272A30] p-3 rounded-lg rounded-bl-none flex gap-1">
-                <div className="w-2 h-2 bg-[#8A8F98] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-[#8A8F98] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-[#8A8F98] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="flex justify-start animate-fade-in">
+              <div className="bg-[#1A1D21] border border-[#272A30] p-4 rounded-xl rounded-bl-none flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-orange-500/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2.5 h-2.5 bg-orange-500/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2.5 h-2.5 bg-orange-500/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
             </div>
           )}
@@ -92,19 +109,19 @@ export default function AiCopilot() {
 
         {/* Input Area */}
         <div className="p-4 bg-[#090A0B] border-t border-[#272A30]">
-          <form onSubmit={handleSend} className="flex gap-2 relative">
+          <form onSubmit={handleSend} className="flex gap-3 relative">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Gemini to analyze metrics or query the database schema..."
-              className="flex-1 bg-[#121417] border border-[#272A30] text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-orange-500/50 transition-colors placeholder-[#8A8F98]"
+              placeholder="Ask Gemini to check cpu usage, verify PostgreSQL schemas, or guide you through an outage..."
+              className="flex-1 bg-[#121417] border border-[#272A30] text-sm rounded-lg px-4 py-3.5 focus:outline-none focus:border-orange-500/60 transition-all placeholder-[#8A8F98] glow-input text-white"
               disabled={isLoading}
             />
             <button 
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="bg-orange-500/10 text-orange-500 border border-orange-500/30 px-4 py-2 rounded-lg hover:bg-orange-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="bg-orange-500 text-white font-bold px-6 py-2.5 rounded-lg hover:bg-orange-400 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.15)] cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

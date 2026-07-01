@@ -66,7 +66,7 @@ def login_step_one(form_data: OAuth2PasswordRequestForm = Depends(), db: Session
     
     # SIMULATE SENDING AN EMAIL
     print("\n" + "="*50)
-    print(f"🚨 EMAIL TO: {user.email} 🚨")
+    print(f"[EMAIL SIMULATION] EMAIL TO: {user.email}")
     print(f"Your CloudOps Login Code is: {mfa_code}")
     print("="*50 + "\n")
     
@@ -86,9 +86,9 @@ def verify_mfa_code(request: MFARequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User profile not found.")
         
-    # 🔥 DEVELOPER MASTER BYPASS FOR DEADLINE TESTING 🔥
+    # DEVELOPER MASTER BYPASS FOR DEADLINE TESTING
     if request.code == "000000":
-        print(f"⚠️ [DEV MODE] Master MFA bypass applied for user: {user.username}")
+        print(f"[DEV MODE] Master MFA bypass applied for user: {user.username}")
     else:
         # Standard live verification check
         if user.security_code != request.code:
@@ -130,3 +130,79 @@ def debug_session(current_user: User = Depends(get_current_user)):
         "authenticated_as": current_user.username,
         "active_database_session": current_user.session_id
     }
+
+
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+class ProfileUpdateRequest(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+
+@router.put("/profile")
+def update_profile(
+    request: ProfileUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if request.username:
+        dup = db.query(User).filter(User.username == request.username, User.id != current_user.id).first()
+        if dup:
+            raise HTTPException(status_code=400, detail="Username already in use")
+        current_user.username = request.username
+        
+    if request.email:
+        dup = db.query(User).filter(User.email == request.email, User.id != current_user.id).first()
+        if dup:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        current_user.email = request.email
+        
+    if request.full_name:
+        current_user.full_name = request.full_name
+        
+    if request.password:
+        current_user.password = get_password_hash(request.password)
+        
+    db.commit()
+    db.refresh(current_user)
+    
+    session_id = str(uuid.uuid4())
+    current_user.session_id = session_id
+    db.commit()
+    
+    new_token = create_access_token(
+        data={"sub": current_user.username, "session": session_id},
+        expires_delta=timedelta(minutes=30)
+    )
+    
+    return {
+        "status": "success",
+        "message": "Profile updated successfully.",
+        "access_token": new_token,
+        "user": {
+            "username": current_user.username,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "role": current_user.role
+        }
+    }
+
+@router.delete("/profile")
+def delete_profile(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    db.delete(current_user)
+    db.commit()
+    return {"status": "success", "message": "Operator credentials retracted successfully."}
+
+@router.get("/profile")
+def get_profile(current_user: User = Depends(get_current_user)):
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role
+    }
