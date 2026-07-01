@@ -1,4 +1,13 @@
-export const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const isLocal = 
+  import.meta.env.DEV ||
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === '[::1]' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.startsWith('10.') ||
+  window.location.hostname.startsWith('172.');
+
+export const API_BASE = isLocal
   ? 'http://localhost:8000'
   : 'https://cloudops360.onrender.com';
 
